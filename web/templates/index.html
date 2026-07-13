@@ -1,0 +1,59 @@
+{{define "title"}}Home{{end}}
+{{define "content"}}
+<div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between mb-10">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Your Prompts</h1>
+        <p class="mt-1 text-base text-gray-500">Manage and organize your prompt templates.</p>
+    </div>
+    <a href="/prompts/new"
+       class="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        New Prompt
+    </a>
+</div>
+
+{{if .Prompts}}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+    {{range .Prompts}}
+    <a href="/prompts/{{.ID}}"
+       class="group relative flex min-h-0 flex-col aspect-square rounded-xl border border-gray-200 bg-white p-4 md:p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
+        <div class="min-w-0 shrink-0">
+            <h2 class="text-lg font-bold leading-snug text-gray-900 line-clamp-3 break-words group-hover:text-indigo-600 transition sm:text-xl">
+                {{.Name}}
+            </h2>
+            {{if .Description}}
+            <p class="mt-2 text-sm leading-snug text-gray-500 line-clamp-2">{{.Description}}</p>
+            {{end}}
+        </div>
+        <div class="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+            {{if gt .Version 0}}
+            <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-semibold tabular-nums text-indigo-700">v{{.Version}}</span>
+            {{else}}
+            <span class="text-xs font-medium text-gray-400">No active version</span>
+            {{end}}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+        </div>
+    </a>
+    {{end}}
+</div>
+{{else}}
+<div class="text-center py-20">
+    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+    </svg>
+    <h3 class="mt-4 text-lg font-medium text-gray-900">No prompts yet</h3>
+    <p class="mt-1 text-base text-gray-500">Get started by creating your first prompt.</p>
+    <a href="/prompts/new"
+       class="mt-6 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        New Prompt
+    </a>
+</div>
+{{end}}
+{{end}}

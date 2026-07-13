@@ -1,0 +1,213 @@
+{{define "title"}}Server{{end}}
+{{define "content"}}
+<div class="space-y-10">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Server</h1>
+        <p class="mt-2 text-sm text-gray-500">Admin controls for this Promptify instance.</p>
+    </div>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-900">Registration</h2>
+        <p class="mt-1 text-sm text-gray-500">Allow new users to create accounts from the sign-in page.</p>
+        <label class="mt-4 inline-flex items-center gap-3 text-sm text-gray-800">
+            <input id="allow-registration" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" {{if .AllowRegistration}}checked{{end}}>
+            Allow self-registration
+        </label>
+        <p id="registration-status" class="mt-2 text-sm text-gray-500"></p>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-900">Users</h2>
+        <p class="mt-1 text-sm text-gray-500">Manually add or remove users. Not all users are listed here — only the 10 most recently logged-in accounts. Search by email to find a specific user. The admin account cannot be removed.</p>
+
+        <form id="add-user-form" class="mt-4 grid gap-3 sm:grid-cols-4">
+            <input id="new-user-email" type="email" required placeholder="Email" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <input id="new-user-name" type="text" required placeholder="Name" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <input id="new-user-password" type="password" required minlength="8" placeholder="Password (8+)" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Add user</button>
+        </form>
+        <p id="users-status" class="mt-2 text-sm text-gray-500"></p>
+
+        <form id="users-search-form" class="mt-4 flex flex-wrap gap-2">
+            <input
+                id="users-email-query"
+                type="search"
+                placeholder="Search by email"
+                class="min-w-[16rem] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            >
+            <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Search</button>
+            <button type="button" id="users-clear" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50">Clear</button>
+        </form>
+
+        <div class="mt-6 overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+                <thead class="border-b border-gray-200 text-gray-500">
+                    <tr>
+                        <th class="py-2 pr-4 font-medium">Name</th>
+                        <th class="py-2 pr-4 font-medium">Email</th>
+                        <th class="py-2 pr-4 font-medium">Created</th>
+                        <th class="py-2 pr-4 font-medium">Last login</th>
+                        <th class="py-2 font-medium"></th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody">
+                    {{range .Users}}
+                    <tr class="border-b border-gray-100">
+                        <td class="py-3 pr-4 text-gray-900">{{.Name}}{{if .IsAdmin}} <span class="text-xs font-semibold uppercase text-amber-700">admin</span>{{end}}</td>
+                        <td class="py-3 pr-4 text-gray-700">{{.Email}}</td>
+                        <td class="py-3 pr-4 text-gray-500">{{.CreatedAt}}</td>
+                        <td class="py-3 pr-4 text-gray-500">{{.LastLoginAt}}</td>
+                        <td class="py-3">
+                            {{if not .IsAdmin}}
+                            <button type="button" data-delete-uid="{{.UID}}" class="delete-user text-sm font-medium text-red-600 hover:text-red-500">Remove</button>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="5" class="py-4 text-gray-500">No users yet.</td></tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">Server logs</h2>
+                <p class="mt-1 text-sm text-gray-500">Download process/event log file ({{.LogFileName}}).</p>
+            </div>
+            <a href="/api/admin/logs/download" class="inline-flex rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50">Download log</a>
+        </div>
+    </section>
+</div>
+
+<script>
+(function () {
+    function escapeHtml(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    const checkbox = document.getElementById('allow-registration');
+    const regStatus = document.getElementById('registration-status');
+    checkbox.addEventListener('change', async () => {
+        regStatus.textContent = 'Saving...';
+        try {
+            const resp = await fetch('/api/admin/settings/registration', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ allow_registration: checkbox.checked })
+            });
+            if (!resp.ok) throw new Error('Save failed');
+            regStatus.textContent = 'Saved.';
+        } catch (e) {
+            regStatus.textContent = 'Failed to save.';
+            checkbox.checked = !checkbox.checked;
+        }
+    });
+
+    const form = document.getElementById('add-user-form');
+    const usersStatus = document.getElementById('users-status');
+    const usersTbody = document.getElementById('users-tbody');
+    const usersEmailQuery = document.getElementById('users-email-query');
+    let usersEmailFilter = '';
+
+    function bindDeleteButtons() {
+        usersTbody.querySelectorAll('.delete-user').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const uid = btn.getAttribute('data-delete-uid');
+                if (!uid || !confirm('Remove this user and their prompts?')) return;
+                const resp = await fetch('/api/admin/users?uid=' + encodeURIComponent(uid), { method: 'DELETE' });
+                if (resp.ok || resp.status === 204) {
+                    loadUsers();
+                } else {
+                    alert('Failed to remove user');
+                }
+            });
+        });
+    }
+
+    async function loadUsers() {
+        usersStatus.textContent = 'Loading users...';
+        const params = new URLSearchParams();
+        if (usersEmailFilter) params.set('email', usersEmailFilter);
+        try {
+            const resp = await fetch('/api/admin/users' + (params.toString() ? ('?' + params.toString()) : ''), {
+                headers: { 'Accept': 'application/json' }
+            });
+            const text = await resp.text();
+            if (!resp.ok) throw new Error(text || 'Failed to load users');
+            const data = JSON.parse(text);
+            const users = data.users || [];
+            if (users.length === 0) {
+                usersTbody.innerHTML = '<tr><td colspan="5" class="py-4 text-gray-500">' +
+                    (usersEmailFilter ? 'No users match this email.' : 'No users yet.') +
+                    '</td></tr>';
+            } else {
+                usersTbody.innerHTML = users.map((u) => {
+                    const adminBadge = u.is_admin
+                        ? ' <span class="text-xs font-semibold uppercase text-amber-700">admin</span>'
+                        : '';
+                    const removeBtn = u.is_admin
+                        ? ''
+                        : `<button type="button" data-delete-uid="${escapeHtml(u.uid)}" class="delete-user text-sm font-medium text-red-600 hover:text-red-500">Remove</button>`;
+                    return `<tr class="border-b border-gray-100">
+                        <td class="py-3 pr-4 text-gray-900">${escapeHtml(u.name || '')}${adminBadge}</td>
+                        <td class="py-3 pr-4 text-gray-700">${escapeHtml(u.email || '')}</td>
+                        <td class="py-3 pr-4 text-gray-500">${escapeHtml(u.created_at || '—')}</td>
+                        <td class="py-3 pr-4 text-gray-500">${escapeHtml(u.last_login_at || '—')}</td>
+                        <td class="py-3">${removeBtn}</td>
+                    </tr>`;
+                }).join('');
+                bindDeleteButtons();
+            }
+            usersStatus.textContent = '';
+        } catch (err) {
+            usersStatus.textContent = err.message || 'Failed to load users';
+        }
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        usersStatus.textContent = 'Creating...';
+        try {
+            const resp = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('new-user-email').value.trim(),
+                    name: document.getElementById('new-user-name').value.trim(),
+                    password: document.getElementById('new-user-password').value
+                })
+            });
+            if (!resp.ok) {
+                const t = await resp.text();
+                throw new Error(t || 'Create failed');
+            }
+            form.reset();
+            await loadUsers();
+            usersStatus.textContent = 'User created.';
+        } catch (err) {
+            usersStatus.textContent = err.message || 'Create failed';
+        }
+    });
+
+    document.getElementById('users-search-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        usersEmailFilter = usersEmailQuery.value.trim();
+        loadUsers();
+    });
+    document.getElementById('users-clear').addEventListener('click', () => {
+        usersEmailQuery.value = '';
+        usersEmailFilter = '';
+        loadUsers();
+    });
+
+    bindDeleteButtons();
+})();
+</script>
+{{end}}

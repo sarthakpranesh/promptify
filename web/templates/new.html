@@ -1,0 +1,73 @@
+{{define "title"}}New Prompt{{end}}
+{{define "content"}}
+<div class="mb-8">
+    <a href="/dashboard" class="inline-flex items-center gap-1 text-base text-gray-500 hover:text-indigo-600 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to prompts
+    </a>
+</div>
+
+<div class="max-w-2xl">
+    <h1 class="text-2xl font-bold text-gray-900">Create New Prompt</h1>
+    <p class="mt-1 text-base text-gray-500">Add a new prompt template to your collection.</p>
+
+    <form method="POST" action="/prompts" class="mt-8 space-y-6">
+        <div>
+            <label for="name" class="block text-base font-medium text-gray-700">Name</label>
+            <input type="text" name="name" id="name" required minlength="3" pattern="[A-Za-z0-9 _-]{3,}" placeholder="e.g. email-reply"
+                   class="mt-1.5 block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition">
+            <p class="mt-1.5 text-sm text-gray-400">At least 3 characters. Allowed: letters, numbers, spaces, hyphens, underscores.</p>
+        </div>
+
+        <div>
+            <label for="description" class="block text-base font-medium text-gray-700">Description</label>
+            <input type="text" name="description" id="description" pattern="[A-Za-z0-9 _-]*" placeholder="Briefly describe what this prompt does"
+                   class="mt-1.5 block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition">
+        </div>
+
+        <div>
+            <label for="prompt" class="block text-base font-medium text-gray-700">Prompt Template</label>
+            <textarea name="prompt" id="prompt" rows="10" required
+                      placeholder='Write your prompt here. Use {{ "{{.variableName}}" }} for template variables.'
+                      class="mt-1.5 block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base shadow-sm font-mono placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition resize-y"></textarea>
+            <p class="mt-1.5 text-sm text-gray-400">Uses Go text/template syntax and must contain at least 3 words. Example: "Write a {{ "{{.tone}}" }} reply to: {{ "{{.input}}" }}"</p>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+            <button type="submit"
+                    class="inline-flex items-center rounded-lg bg-indigo-600 px-5 py-2.5 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 transition">
+                Create Prompt
+            </button>
+            <a href="/dashboard" class="text-base font-medium text-gray-500 hover:text-gray-700 transition">Cancel</a>
+        </div>
+    </form>
+</div>
+<script>
+(() => {
+    const form = document.querySelector('form[action="/prompts"]');
+    const nameInput = document.getElementById('name');
+    const descInput = document.getElementById('description');
+    const promptInput = document.getElementById('prompt');
+    const allowed = /[^A-Za-z0-9 _-]/g;
+
+    function sanitize(el) {
+        el.value = el.value.replace(allowed, '').trimStart();
+    }
+
+    nameInput.addEventListener('input', () => sanitize(nameInput));
+    descInput.addEventListener('input', () => sanitize(descInput));
+
+    form.addEventListener('submit', (event) => {
+        sanitize(nameInput);
+        sanitize(descInput);
+        const wordCount = promptInput.value.trim().split(/\s+/).filter(Boolean).length;
+        if (wordCount < 3) {
+            event.preventDefault();
+            alert('Prompt template must contain at least 3 words.');
+        }
+    });
+})();
+</script>
+{{end}}

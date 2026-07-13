@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promptify — Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        html { font-size: 75%; }
+        @media (min-width: 1024px) {
+            html { font-size: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen font-sans text-base leading-relaxed">
+    <main class="min-h-screen flex items-center justify-center px-6 py-12">
+        <div class="w-full max-w-sm">
+            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 text-center">Promptify</h1>
+            <p class="mt-2 text-sm text-gray-500 text-center">Create an account</p>
+
+            <form id="register-form" class="mt-8 space-y-4" autocomplete="on">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input id="email" name="email" type="email" required autocomplete="username"
+                        class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                    <input id="name" name="name" type="text" required autocomplete="name"
+                        class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password"
+                        class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </div>
+                <button id="register-submit" type="submit"
+                    class="w-full inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 transition disabled:opacity-60">
+                    Create account
+                </button>
+                <div id="auth-error" class="text-sm text-red-600 text-center hidden"></div>
+                <p class="text-sm text-center text-gray-500"><a href="/" class="text-indigo-600 hover:text-indigo-500">Back to sign in</a></p>
+            </form>
+        </div>
+    </main>
+    <script>
+        const form = document.getElementById('register-form');
+        const errorEl = document.getElementById('auth-error');
+        const btn = document.getElementById('register-submit');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorEl.classList.add('hidden');
+            btn.disabled = true;
+            try {
+                const resp = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value.trim(),
+                        name: document.getElementById('name').value.trim(),
+                        password: document.getElementById('password').value
+                    })
+                });
+                if (!resp.ok) {
+                    const t = await resp.text();
+                    throw new Error(t || 'Registration failed');
+                }
+                const data = await resp.json();
+                window.location.href = data.redirect_to || '/dashboard';
+            } catch (err) {
+                errorEl.textContent = (err && err.message) ? err.message : 'Registration failed';
+                errorEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

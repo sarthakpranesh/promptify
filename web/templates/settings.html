@@ -1,0 +1,365 @@
+{{define "title"}}Settings{{end}}
+{{define "content"}}
+<div class="max-w-3xl">
+    <h1 class="text-2xl font-bold text-gray-900">Settings</h1>
+    <p class="mt-2 text-base text-gray-500">Manage your profile, API access, and account controls.</p>
+    <div class="mt-8 space-y-6">
+        <section class="rounded-xl border border-gray-200 bg-white p-6">
+            <h2 class="text-lg font-semibold text-gray-900">Profile &amp; Session</h2>
+            <p class="mt-1 text-sm text-gray-500">Your identity details used in Promptify.</p>
+
+            <dl class="mt-5 space-y-4">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Full name</dt>
+                    <dd class="mt-1 text-base text-gray-900">{{.CurrentUser.FullName}}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Email</dt>
+                    <dd class="mt-1 text-base text-gray-900">{{.CurrentUser.Email}}</dd>
+                </div>
+            </dl>
+
+            <div class="mt-6">
+                <a href="/logout"
+                   class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                    Logout
+                </a>
+            </div>
+        </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6">
+            <h2 class="text-lg font-semibold text-gray-900">API Access &amp; Integrations</h2>
+            <p class="mt-1 text-sm text-gray-500">
+                Create or rotate your API key for MCP and API usage.
+            </p>
+
+            <div class="mt-5 flex flex-wrap gap-3">
+                <button id="generate-api-key"
+                        type="button"
+                        class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition">
+                    Generate API Key
+                </button>
+            </div>
+
+            <div id="api-key-wrapper" class="mt-4 hidden">
+                <p class="mb-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    This API key will be shown only once. Please copy and store it securely.
+                </p>
+                <code id="api-key-value"
+                      class="block w-full overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800"></code>
+                <button id="copy-api-key"
+                        type="button"
+                        class="hidden mt-3 inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                        disabled>
+                    Copy API Key
+                </button>
+            </div>
+
+            <div class="mt-8 border-t border-gray-200 pt-6">
+                <h3 class="text-sm font-semibold text-gray-900">Integration Configuration</h3>
+                <p class="mt-1 text-sm text-gray-500">Select your tool and copy the matching configuration. Replace placeholders with your values.</p>
+
+                <div class="mt-4 inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1" role="tablist" aria-label="Integration configuration tabs">
+                    <button type="button" class="integration-tab rounded-md px-3 py-1.5 text-sm font-medium bg-white text-indigo-700 shadow-sm" data-tab="mcp" role="tab" aria-selected="true">MCP</button>
+                    <button type="button" class="integration-tab rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900" data-tab="api" role="tab" aria-selected="false">API</button>
+                </div>
+
+                <div class="mt-4 space-y-4">
+                    <div class="integration-panel" data-panel="mcp">
+                        <p class="text-sm font-medium text-gray-700">MCP configuration</p>
+                        <pre class="mt-2 block w-full overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">{
+  "mcpServers": {
+    "promptify": {
+      "url": "{{.BaseURL}}/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}</pre>
+                    </div>
+
+                    <div class="integration-panel hidden" data-panel="api">
+                        <p class="text-sm font-medium text-gray-700">API configuration</p>
+                        <pre class="mt-2 block w-full overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">List prompts:
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  {{.BaseURL}}/api/prompts
+
+Get one prompt by id:
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  {{.BaseURL}}/api/prompts/{id}</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6">
+            <h2 class="text-lg font-semibold text-gray-900">Workspace Controls</h2>
+            <p class="mt-1 text-sm text-gray-500">Export data or perform irreversible account actions.</p>
+
+            <div class="mt-5 flex flex-wrap gap-3">
+                <button id="download-all-prompts"
+                        type="button"
+                        class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                    Download All Prompts
+                </button>
+                {{if not .CurrentUser.IsAdmin}}
+                <button type="button"
+                        id="delete-account"
+                        class="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 transition">
+                    Delete Account
+                </button>
+                {{end}}
+            </div>
+        </section>
+    </div>
+</div>
+
+<div id="api-key-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="fixed inset-0 bg-black/40" id="api-key-modal-backdrop"></div>
+    <div class="relative mx-4 w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+        <h3 class="text-lg font-semibold text-gray-900">Generate new API key?</h3>
+        <p class="mt-2 text-sm text-gray-600">
+            This will reset your old API key. Any integration using the previous key will stop working until updated.
+        </p>
+        <div class="mt-6 flex items-center justify-end gap-3">
+            <button id="cancel-generate-api-key"
+                    type="button"
+                    class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                Cancel
+            </button>
+            <button id="confirm-generate-api-key"
+                    type="button"
+                    class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition">
+                Yes, generate key
+            </button>
+        </div>
+    </div>
+</div>
+
+{{if not .CurrentUser.IsAdmin}}
+<div id="delete-account-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="fixed inset-0 bg-black/40" id="delete-account-backdrop"></div>
+    <div class="relative mx-4 w-full max-w-md rounded-xl border border-red-200 bg-white p-6 shadow-xl">
+        <h3 class="text-lg font-semibold text-gray-900">Delete account permanently?</h3>
+        <p class="mt-2 text-sm text-gray-600">
+            This action is irreversible. All your prompts, versions, API access, and account data will be permanently deleted from the platform.
+        </p>
+        <p class="mt-3 text-sm text-gray-700">
+            To confirm, type your complete account name exactly: <span id="delete-expected-name" class="font-semibold"></span>
+        </p>
+        <input id="delete-account-name-input"
+               type="text"
+               autocomplete="off"
+               class="mt-3 block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm shadow-sm placeholder:text-gray-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition"
+               placeholder="Type your complete name to confirm">
+        <div class="mt-6 flex items-center justify-end gap-3">
+            <button id="cancel-delete-account"
+                    type="button"
+                    class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                Cancel
+            </button>
+            <button id="confirm-delete-account"
+                    type="button"
+                    class="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 transition disabled:cursor-not-allowed disabled:bg-red-300"
+                    disabled>
+                Delete account
+            </button>
+        </div>
+    </div>
+</div>
+{{end}}
+
+<script>
+    (function () {
+        const generateBtn = document.getElementById('generate-api-key');
+        const copyBtn = document.getElementById('copy-api-key');
+        const keyWrapper = document.getElementById('api-key-wrapper');
+        const keyValue = document.getElementById('api-key-value');
+        const modal = document.getElementById('api-key-modal');
+        const modalBackdrop = document.getElementById('api-key-modal-backdrop');
+        const cancelGenerateBtn = document.getElementById('cancel-generate-api-key');
+        const confirmGenerateBtn = document.getElementById('confirm-generate-api-key');
+        const downloadAllPromptsBtn = document.getElementById('download-all-prompts');
+        const deleteAccountBtn = document.getElementById('delete-account');
+        const deleteAccountModal = document.getElementById('delete-account-modal');
+        const deleteAccountBackdrop = document.getElementById('delete-account-backdrop');
+        const cancelDeleteAccountBtn = document.getElementById('cancel-delete-account');
+        const confirmDeleteAccountBtn = document.getElementById('confirm-delete-account');
+        const deleteAccountNameInput = document.getElementById('delete-account-name-input');
+        const deleteExpectedName = document.getElementById('delete-expected-name');
+        const expectedAccountName = {{printf "%q" .CurrentUser.FullName}};
+        const integrationTabs = document.querySelectorAll('.integration-tab');
+        const integrationPanels = document.querySelectorAll('.integration-panel');
+
+        function normalizeDeleteName(name) {
+            return name.replaceAll('"', '').trim();
+        }
+
+        function switchIntegrationTab(tabId) {
+            integrationTabs.forEach(function (tab) {
+                const isActive = tab.dataset.tab === tabId;
+                tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                tab.classList.toggle('bg-white', isActive);
+                tab.classList.toggle('text-indigo-700', isActive);
+                tab.classList.toggle('shadow-sm', isActive);
+                tab.classList.toggle('text-gray-600', !isActive);
+            });
+
+            integrationPanels.forEach(function (panel) {
+                panel.classList.toggle('hidden', panel.dataset.panel !== tabId);
+            });
+        }
+
+        function revealKey(apiKey) {
+            keyValue.textContent = apiKey;
+            keyWrapper.classList.remove('hidden');
+            copyBtn.classList.remove('hidden');
+            copyBtn.disabled = false;
+        }
+
+        function openModal() {
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        async function generateKey() {
+            const resp = await fetch('/api/account/api-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!resp.ok) {
+                throw new Error('Failed to generate API key');
+            }
+            const data = await resp.json();
+            if (!data.api_key) {
+                throw new Error('Invalid API key response');
+            }
+            return data.api_key;
+        }
+
+        async function copyApiKey() {
+            if (!keyValue.textContent) return;
+            try {
+                await navigator.clipboard.writeText(keyValue.textContent);
+                copyBtn.textContent = 'Copied';
+                setTimeout(function () {
+                    copyBtn.textContent = 'Copy API Key';
+                }, 1000);
+            } catch (_) {
+                copyBtn.textContent = 'Copy failed';
+                setTimeout(function () {
+                    copyBtn.textContent = 'Copy API Key';
+                }, 1000);
+            }
+        }
+
+        async function downloadAllPrompts() {
+            const originalText = downloadAllPromptsBtn.textContent;
+            downloadAllPromptsBtn.disabled = true;
+            downloadAllPromptsBtn.textContent = 'Preparing download...';
+
+            try {
+                const resp = await fetch('/api/prompts/export');
+                if (!resp.ok) {
+                    throw new Error('Failed to export prompts');
+                }
+
+                const blob = await resp.blob();
+                const objectURL = window.URL.createObjectURL(blob);
+                const downloadLink = document.createElement('a');
+                const disposition = resp.headers.get('Content-Disposition') || '';
+                const fileNameMatch = disposition.match(/filename="([^"]+)"/i);
+                const fileName = fileNameMatch ? fileNameMatch[1] : 'promptify-prompts.json';
+
+                downloadLink.href = objectURL;
+                downloadLink.download = fileName;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                downloadLink.remove();
+                window.URL.revokeObjectURL(objectURL);
+            } catch (_) {
+                alert('Failed to download prompts. Please try again.');
+            } finally {
+                downloadAllPromptsBtn.disabled = false;
+                downloadAllPromptsBtn.textContent = originalText;
+            }
+        }
+
+        function openDeleteAccountModal() {
+            deleteExpectedName.textContent = expectedAccountName;
+            deleteAccountNameInput.value = '';
+            confirmDeleteAccountBtn.disabled = true;
+            deleteAccountModal.classList.remove('hidden');
+            deleteAccountNameInput.focus();
+        }
+
+        function closeDeleteAccountModal() {
+            deleteAccountModal.classList.add('hidden');
+        }
+
+        function updateDeleteConfirmationState() {
+            confirmDeleteAccountBtn.disabled = normalizeDeleteName(deleteAccountNameInput.value) !== normalizeDeleteName(expectedAccountName);
+        }
+
+        async function deleteAccount() {
+            const originalText = confirmDeleteAccountBtn.textContent;
+            confirmDeleteAccountBtn.disabled = true;
+            confirmDeleteAccountBtn.textContent = 'Deleting...';
+
+            try {
+                const resp = await fetch('/api/account/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ confirm_name: normalizeDeleteName(deleteAccountNameInput.value) })
+                });
+                if (!resp.ok) {
+                    throw new Error('Failed to delete account');
+                }
+                const data = await resp.json();
+                window.location.href = data.redirect_to || '/';
+            } catch (_) {
+                alert('Failed to delete account. Please make sure the username matches and try again.');
+                confirmDeleteAccountBtn.disabled = false;
+                confirmDeleteAccountBtn.textContent = originalText;
+            }
+        }
+
+        generateBtn.addEventListener('click', openModal);
+        modalBackdrop.addEventListener('click', closeModal);
+        cancelGenerateBtn.addEventListener('click', closeModal);
+        confirmGenerateBtn.addEventListener('click', async function () {
+            confirmGenerateBtn.disabled = true;
+            confirmGenerateBtn.textContent = 'Generating...';
+            try {
+                const apiKey = await generateKey();
+                revealKey(apiKey);
+                closeModal();
+            } catch (_) {
+                alert('Failed to generate API key. Please try again.');
+            } finally {
+                confirmGenerateBtn.disabled = false;
+                confirmGenerateBtn.textContent = 'Yes, generate key';
+            }
+        });
+        copyBtn.addEventListener('click', copyApiKey);
+        downloadAllPromptsBtn.addEventListener('click', downloadAllPrompts);
+        if (deleteAccountBtn) {
+            deleteAccountBtn.addEventListener('click', openDeleteAccountModal);
+            deleteAccountBackdrop.addEventListener('click', closeDeleteAccountModal);
+            cancelDeleteAccountBtn.addEventListener('click', closeDeleteAccountModal);
+            deleteAccountNameInput.addEventListener('input', updateDeleteConfirmationState);
+            confirmDeleteAccountBtn.addEventListener('click', deleteAccount);
+        }
+        integrationTabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                switchIntegrationTab(tab.dataset.tab);
+            });
+        });
+    })();
+</script>
+{{end}}
+

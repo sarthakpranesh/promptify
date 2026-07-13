@@ -1,0 +1,12 @@
+.git
+.github
+.cursor
+tmp
+dist
+bin
+node_modules
+prompts.db
+*.log
+*.out
+data
+container_data
