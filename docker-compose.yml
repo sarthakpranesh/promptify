@@ -1,9 +1,6 @@
 services:
   promptify:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: sarthakpranesh/promptify:0.0.1
+    image: sarthakpranesh/promptify:latest
     container_name: promptify
     restart: unless-stopped
     ports:
@@ -11,4 +8,4 @@ services:
     env_file:
       - .env
     volumes:
-      - ./container_data:/app/data
+      - ./promptify_data:/app/data
