@@ -10,3 +10,6 @@ prompts.db
 *.out
 data
 container_data
+.env
+.env.*
+e2e/.env
