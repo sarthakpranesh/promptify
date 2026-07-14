@@ -26,11 +26,12 @@ docker run -d \
   --name promptify \
   --restart unless-stopped \
   -p 8080:8080 \
+  -e PROMPTIFY_SESSION_SECRET="replace-with-long-random-string" \
   sarthakpranesh/promptify:latest
 ```
 
 With compose
-```bash
+```yaml
 services:
   promptify:
     image: sarthakpranesh/promptify:latest
@@ -38,6 +39,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    environment:
+      PROMPTIFY_SESSION_SECRET: "replace-with-long-random-string"
 ```
 
 Open [http://localhost:8080](http://localhost:8080). The default admin credentials are `admin@promptify.com` and `admin`.
@@ -69,8 +72,7 @@ For users
 2. Create and edit prompts on the dashboard.
 3. Open Settings to generate an API key for tools and automations.
 
-For admins
-Everything a non admin user can do and below
+For admins, everything a non admin user can do and below
 1. Open the Server console to:
    - Toggle self-registration
    - Add or remove users (the admin account cannot be removed)
