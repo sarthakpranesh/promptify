@@ -6,7 +6,7 @@ if [[ ! -f .env ]]; then
 	exit 2
 fi
 
-docker compose up --build -d
+docker compose -f docker-compose-local.yml up --build -d
 
 echo "Promptify is running at http://localhost:8080"
 echo "Logs: docker compose logs -f"

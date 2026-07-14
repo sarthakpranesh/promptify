@@ -1,3 +1,4 @@
 /data
 /container_data
 .env
+/promptify_data

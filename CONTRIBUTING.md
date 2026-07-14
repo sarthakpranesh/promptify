@@ -12,15 +12,14 @@ Prefer small, reviewable changes over large unrelated refactors.
 
 ## Development setup
 
-**Requirements:**
-
+Requirements:
 - Go `1.23+`
-- Optional: [gum](https://github.com/charmbracelet/gum) for interactive helpers (`./run-local.sh`, `./e2e/smoke.sh`)
+- Optional: [gum](https://github.com/charmbracelet/gum) for interactive smoke tests (`./e2e/smoke.sh`)
 - Optional: Docker / Docker Compose for containerized runs and smoke tests
 
+### Direct run
 ```bash
 cp .env.example .env
-# set PROMPTIFY_SESSION_SECRET (long random string)
 
 ./run-local.sh
 # or:
@@ -29,20 +28,13 @@ PROMPTIFY_SESSION_SECRET="dev-secret" go run ./cmd/server
 
 Server listens on `http://localhost:8080`. Default admin: `admin@promptify.com` / `admin`.
 
-Compose (same as end users):
+### Compose
+
+Builds from `Dockerfile` via `docker-compose-local.yml` (needs `.env`; data under `./promptify_data`):
 
 ```bash
 ./build-and-start.sh
 ```
-
-## Tech stack
-
-- Go `1.23`
-- Router: [chi](https://github.com/go-chi/chi)
-- Storage: SQLite (default, `data/database.db`) or MongoDB when `PROMPTIFY_MONGO_DB_URI` is set
-- Auth: email + password; sole admin UID stored separately from user credentials
-- MCP: Streamable HTTP at `/mcp`
-- UI: server-rendered HTML under `web/templates`
 
 ## Project layout
 
@@ -113,7 +105,8 @@ Keep the smoke script green for changes that touch REST, MCP, auth, or storage b
 
 ## Release / image notes
 
-- Local image via Compose: see `Dockerfile` and `docker-compose.yml`.
+- Local build/run: `docker-compose-local.yml` (via `./build-and-start.sh`).
+- Hub image for consumers: `docker-compose.yml` (`sarthakpranesh/promptify:latest`).
 - Multi-arch Hub publish: `./build-and-push.sh` (adjust tag/`PLATFORMS` as needed).
 
 ## Questions
