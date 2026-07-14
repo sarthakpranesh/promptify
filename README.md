@@ -38,11 +38,6 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
-    # Uncomment when you device to daily drive
-    # env_file:
-    #   - .env
-    # volumes:
-    #   - ./container_data:/app/data
 ```
 
 Open [http://localhost:8080](http://localhost:8080). The default admin credentials are `admin@promptify.com` and `admin`.
@@ -51,10 +46,10 @@ Open [http://localhost:8080](http://localhost:8080). The default admin credentia
 
 Refer [.env.example](.env.example) and [docker-compose.yml](./docker-compose.yml). Just copy and modify values as per your needs.
 
-Volumes
+### Volumes
 Data persists under `./container_data` and the compose file already maps it to a local folder.
 
-ENV Reference Table
+### ENV Reference Table
 | Variable                   | Required | Description                                                                 |
 | -------------------------- | -------- | --------------------------------------------------------------------------- |
 | `PROMPTIFY_SESSION_SECRET` | Yes      | Long random string for signed login cookies. Keep it stable across restarts, unless you want to logout all your users. |
