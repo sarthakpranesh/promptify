@@ -175,29 +175,6 @@ func isAdminRequest(r *http.Request, s store.Store) bool {
 }
 
 func redirectToLogin(w http.ResponseWriter, r *http.Request) {
-	// Only allow redirects within this origin.
-	redirect := r.URL.RequestURI()
-	if !strings.HasPrefix(redirect, "/") {
-		redirect = "/"
-	}
-
-	http.Redirect(
-		w,
-		r,
-		"/?redirect="+urlQueryEscape(redirect),
-		http.StatusSeeOther,
-	)
-}
-
-// urlQueryEscape avoids importing net/url in all callers.
-func urlQueryEscape(s string) string {
-	// Minimal escaping for a path string in a query parameter.
-	// (Paths here are generated server-side; we mainly want '?' '&' and spaces handled.)
-	s = strings.ReplaceAll(s, " ", "%20")
-	s = strings.ReplaceAll(s, "+", "%2B")
-	s = strings.ReplaceAll(s, "?", "%3F")
-	s = strings.ReplaceAll(s, "&", "%26")
-	s = strings.ReplaceAll(s, "#", "%23")
-	return s
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
