@@ -6,27 +6,22 @@ set -euo pipefail
 # Docker Hub image coordinates.
 DOCKERHUB_USERNAME="sarthakpranesh"
 IMAGE_NAME="promptify"
-TAG="0.0.6"
-
-# Comma-separated platforms for buildx (override: PLATFORMS=linux/arm64 ./build-and-push.sh).
-PLATFORMS="${PLATFORMS:-linux/amd64,linux/arm64}"
-
-# Buildx builder name (override: BUILDX_BUILDER=mybuilder ./build-and-push.sh).
-BUILDX_BUILDER="${BUILDX_BUILDER:-multiarch}"
+TAG="0.0.1"
 
 # Full image name to build and push (version tag + latest).
 FULL_IMAGE_NAME="${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${TAG}"
 LATEST_IMAGE_NAME="${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest"
 
+# Always multi-arch: linux/amd64 + linux/arm64 via a docker-container buildx builder.
 # The default "docker" driver cannot build multiple platforms in one build (classic image store).
-# A "docker-container" builder runs BuildKit in a container and supports multi-arch manifest lists.
 # See: https://docs.docker.com/go/build-multi-platform/
-if ! docker buildx inspect "${BUILDX_BUILDER}" >/dev/null 2>&1; then
-	echo "Creating buildx builder '${BUILDX_BUILDER}' (driver: docker-container)..."
-	docker buildx create --name "${BUILDX_BUILDER}" --driver docker-container --use
+if ! docker buildx inspect multiarch >/dev/null 2>&1; then
+	echo "Creating buildx builder 'multiarch' (driver: docker-container)..."
+	docker buildx create --name multiarch --driver docker-container --use
 else
-	docker buildx use "${BUILDX_BUILDER}"
+	docker buildx use multiarch
 fi
+
 # Pull/build the buildkit image and ensure the builder is ready (first run can be slow).
 docker buildx inspect --bootstrap
 
@@ -35,12 +30,12 @@ docker buildx inspect --bootstrap
 # pure Go (CGO_ENABLED=0) often only needs binfmt when emulating full stages. Docker Desktop
 # usually includes this; on Linux you may need:
 #   docker run --privileged --rm tonistiigi/binfmt --install all
-echo "Building multi-platform (${PLATFORMS}): ${FULL_IMAGE_NAME}, ${LATEST_IMAGE_NAME}"
+echo "Building multi-platform (linux/amd64,linux/arm64): ${FULL_IMAGE_NAME}, ${LATEST_IMAGE_NAME}"
 docker buildx build \
-	--platform "${PLATFORMS}" \
+	--platform linux/amd64,linux/arm64 \
 	-t "${FULL_IMAGE_NAME}" \
 	-t "${LATEST_IMAGE_NAME}" \
 	--push \
 	.
 
-echo "Done. Pushed ${FULL_IMAGE_NAME} and ${LATEST_IMAGE_NAME} (${PLATFORMS})"
+echo "Done. Pushed ${FULL_IMAGE_NAME} and ${LATEST_IMAGE_NAME} (linux/amd64,linux/arm64)"

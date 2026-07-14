@@ -107,7 +107,7 @@ Keep the smoke script green for changes that touch REST, MCP, auth, or storage b
 
 - Local build/run: `docker-compose-local.yml` (via `./build-and-start.sh`).
 - Hub image for consumers: `docker-compose.yml` (`sarthakpranesh/promptify:latest`).
-- Multi-arch Hub publish: `./build-and-push.sh` (adjust tag/`PLATFORMS` as needed).
+- Multi-arch Hub publish (`linux/amd64` + `linux/arm64`): `./build-and-push.sh` (bump `TAG` in the script as needed).
 
 ## Questions
 
