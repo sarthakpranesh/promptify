@@ -39,7 +39,7 @@ Compose (same as end users):
 
 - Go `1.23`
 - Router: [chi](https://github.com/go-chi/chi)
-- Storage: SQLite (default, `data/database.db`) or MongoDB when `MONGO_DB_URI` is set
+- Storage: SQLite (default, `data/database.db`) or MongoDB when `PROMPTIFY_MONGO_DB_URI` is set
 - Auth: email + password; sole admin UID stored separately from user credentials
 - MCP: Streamable HTTP at `/mcp`
 - UI: server-rendered HTML under `web/templates`
@@ -84,8 +84,8 @@ Compose (same as end users):
 export PROMPTIFY_SQLITE_PATH="data/database.db"
 
 # MongoDB
-export MONGO_DB_URI="mongodb://..."
-export SERVER_ENV=dev   # selects dev_promptify or prod_promptify
+export PROMPTIFY_MONGO_DB_URI="mongodb://..."
+export PROMPTIFY_SERVER_ENV=dev   # selects dev_promptify or prod_promptify
 ```
 
 Handlers and middleware depend on `store.Store`, not a concrete DB driver.

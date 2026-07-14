@@ -58,8 +58,8 @@ Copy `.env.example` → `.env`. Compose loads this file automatically.
 | `PROMPTIFY_ADMIN_EMAIL`    | No       | Admin email (default `admin@promptify.com`)                                 |
 | `PROMPTIFY_ADMIN_PASSWORD` | No       | Admin password (default `admin`)                                            |
 | `PROMPTIFY_LOG_PATH`       | No       | Path for the process log (default `data/promptify.log`)                     |
-| `MONGO_DB_URI`             | No       | If set, use MongoDB instead of SQLite                                       |
-| `SERVER_ENV`               | No       | With Mongo: `dev` or `prod` (selects DB name). Default `dev`                |
+| `PROMPTIFY_MONGO_DB_URI`             | No       | If set, use MongoDB instead of SQLite                                       |
+| `PROMPTIFY_SERVER_ENV`               | No       | With Mongo: `dev` or `prod` (selects DB name). Default `dev`                |
 | `PROMPTIFY_SQLITE_PATH`    | No       | SQLite file path (default `data/database.db`)                               |
 
 ### Admin account

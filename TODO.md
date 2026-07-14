@@ -31,7 +31,7 @@
 - [x] `Store` interface for prompt/user/auth operations (`internal/store/store.go`)
 - [x] SQLite implementation + schema migrations (`internal/store/sqlite`)
 - [x] MongoDB implementation + indexes (`internal/store/mongo`)
-- [x] Backend selection via env: SQLite default, Mongo when `MONGO_DB_URI` is set (`internal/db/db.go`)
+- [x] Backend selection via env: SQLite default, Mongo when `PROMPTIFY_MONGO_DB_URI` is set (`internal/db/db.go`)
 - [x] Handlers/middleware depend on `store.Store` (not `*sql.DB`)
 
 ### Docker & ops

@@ -14,8 +14,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BASE_URL=""
 API_KEY=""
-MONGO_DB_URI=""
-SERVER_ENV="dev"
+PROMPTIFY_MONGO_DB_URI=""
+PROMPTIFY_SERVER_ENV="dev"
 WAIT_SECONDS=90
 START_DOCKER=0
 STOP_DOCKER=0
@@ -61,11 +61,11 @@ parse_args() {
 			shift
 			;;
 		--mongo-uri)
-			MONGO_DB_URI="$2"
+			PROMPTIFY_MONGO_DB_URI="$2"
 			shift 2
 			;;
 		--server-env)
-			SERVER_ENV="$2"
+			PROMPTIFY_SERVER_ENV="$2"
 			shift 2
 			;;
 		--stop-docker)
@@ -121,15 +121,15 @@ interactive_config() {
 		db_type="$(gum choose --header "Database for docker" "SQLite" "MongoDB")"
 		case "$db_type" in
 		"SQLite")
-			MONGO_DB_URI=""
+			PROMPTIFY_MONGO_DB_URI=""
 			;;
 		"MongoDB")
-			MONGO_DB_URI="$(gum input --header "MongoDB URI" --placeholder "mongodb+srv://user:pass@cluster.mongodb.net/")"
-			if [[ -z "$MONGO_DB_URI" ]]; then
+			PROMPTIFY_MONGO_DB_URI="$(gum input --header "MongoDB URI" --placeholder "mongodb+srv://user:pass@cluster.mongodb.net/")"
+			if [[ -z "$PROMPTIFY_MONGO_DB_URI" ]]; then
 				echo "MongoDB URI is required." >&2
 				exit 2
 			fi
-			SERVER_ENV="$(gum choose --header "SERVER_ENV" "dev" "prod")"
+			PROMPTIFY_SERVER_ENV="$(gum choose --header "PROMPTIFY_SERVER_ENV" "dev" "prod")"
 			;;
 		esac
 		;;
@@ -201,11 +201,11 @@ wait_for_server() {
 
 start_docker() {
 	echo "Starting Promptify via docker compose..."
-	if [[ -n "$MONGO_DB_URI" ]]; then
-		echo "  database: MongoDB (${SERVER_ENV}_promptify)"
+	if [[ -n "$PROMPTIFY_MONGO_DB_URI" ]]; then
+		echo "  database: MongoDB (${PROMPTIFY_SERVER_ENV}_promptify)"
 		(
 			cd "$ROOT"
-			MONGO_DB_URI="$MONGO_DB_URI" SERVER_ENV="$SERVER_ENV" docker compose up --build -d
+			PROMPTIFY_MONGO_DB_URI="$PROMPTIFY_MONGO_DB_URI" PROMPTIFY_SERVER_ENV="$PROMPTIFY_SERVER_ENV" docker compose up --build -d
 		)
 	else
 		echo "  database: SQLite (container_data volume)"

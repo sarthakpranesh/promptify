@@ -15,14 +15,14 @@ import (
 
 // Open returns the configured Store implementation.
 //
-// Defaults to SQLite. If MONGO_DB_URI is set, connects to MongoDB instead.
+// Defaults to SQLite. If PROMPTIFY_MONGO_DB_URI is set, connects to MongoDB instead.
 //
 // Environment:
-//   - MONGO_DB_URI: MongoDB connection string (Atlas, etc.); when set, uses Mongo
-//   - SERVER_ENV: dev or prod (default dev); selects dev_promptify or prod_promptify when using Mongo
+//   - PROMPTIFY_MONGO_DB_URI: MongoDB connection string (Atlas, etc.); when set, uses Mongo
+//   - PROMPTIFY_SERVER_ENV: dev or prod (default dev); selects dev_promptify or prod_promptify when using Mongo
 //   - PROMPTIFY_SQLITE_PATH: SQLite file path (default data/database.db)
 func Open(ctx context.Context) (store.Store, error) {
-	if uri := strings.TrimSpace(os.Getenv("MONGO_DB_URI")); uri != "" {
+	if uri := strings.TrimSpace(os.Getenv("PROMPTIFY_MONGO_DB_URI")); uri != "" {
 		dbName, err := mongoDatabaseName()
 		if err != nil {
 			return nil, err
@@ -42,7 +42,7 @@ func Open(ctx context.Context) (store.Store, error) {
 }
 
 func mongoDatabaseName() (string, error) {
-	env := strings.ToLower(strings.TrimSpace(os.Getenv("SERVER_ENV")))
+	env := strings.ToLower(strings.TrimSpace(os.Getenv("PROMPTIFY_SERVER_ENV")))
 	if env == "" {
 		env = "dev"
 	}
@@ -52,6 +52,6 @@ func mongoDatabaseName() (string, error) {
 	case "prod":
 		return "prod_promptify", nil
 	default:
-		return "", fmt.Errorf("invalid SERVER_ENV %q: must be dev or prod", env)
+		return "", fmt.Errorf("invalid PROMPTIFY_SERVER_ENV %q: must be dev or prod", env)
 	}
 }
