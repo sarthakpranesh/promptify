@@ -447,14 +447,6 @@ func (s *Store) DeleteUserAndData(ctx context.Context, uid string) error {
 	return nil
 }
 
-func (s *Store) AssignLegacyPrompts(ctx context.Context, uid string) error {
-	_, err := s.db.Collection(collPrompts).UpdateMany(ctx,
-		bson.M{"user_id": "legacy"},
-		bson.M{"$set": bson.M{"user_id": uid}},
-	)
-	return err
-}
-
 func (s *Store) ListPromptsForUser(ctx context.Context, uid string) ([]store.PromptSummary, error) {
 	cur, err := s.db.Collection(collPrompts).Find(ctx,
 		bson.M{"user_id": uid},

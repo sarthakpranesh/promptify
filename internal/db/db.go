@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"promptify/internal/store"
-	sqlitestore "promptify/internal/store/sqlite"
 	mongostore "promptify/internal/store/mongo"
+	sqlitestore "promptify/internal/store/sqlite"
 )
 
 // Open returns the configured Store implementation.

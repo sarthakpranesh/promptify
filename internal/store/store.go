@@ -15,6 +15,7 @@ type Store interface {
 	GetAdminSettings(ctx context.Context) (AdminSettings, error)
 	UpdateAdminSettings(ctx context.Context, settings AdminSettings) error
 
+	// Users: registered, login history, API keys.
 	CountUsers(ctx context.Context) (int, error)
 	UserExists(ctx context.Context, uid string) (bool, error)
 	CreateUser(ctx context.Context, user UserRecord) error
@@ -28,8 +29,7 @@ type Store interface {
 	GetUserAPIKeyHash(ctx context.Context, uid string) (hash string, ok bool, err error)
 	DeleteUserAndData(ctx context.Context, uid string) error
 
-	AssignLegacyPrompts(ctx context.Context, uid string) error
-
+	// Prompts: user-owned, versioned, templates.
 	ListPromptsForUser(ctx context.Context, uid string) ([]PromptSummary, error)
 	GetPromptMeta(ctx context.Context, promptID, uid string) (name, description string, err error)
 	ListPromptVersions(ctx context.Context, promptID string) ([]VersionRecord, error)

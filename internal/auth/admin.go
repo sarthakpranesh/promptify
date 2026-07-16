@@ -25,26 +25,29 @@ const (
 //
 // First launch (admin table empty): create user from PROMPTIFY_ADMIN_* and
 // store a stable UID in admin.
-// Later launches: keep that UID; sync email/password/name from env onto users.
+// Later launches: keep that UID; sync email/password/name from env onto it.
 func BootstrapAdmin(ctx context.Context, s store.Store) error {
+	// read admin email and validate it
 	rawEmail := strings.TrimSpace(os.Getenv("PROMPTIFY_ADMIN_EMAIL"))
+	if rawEmail == "" {
+		rawEmail = defaultAdminEmail
+	}
+	normalized, err := validate.Email(rawEmail)
+	if err != nil {
+		return fmt.Errorf("PROMPTIFY_ADMIN_EMAIL: %w", err)
+	}
+	email := normalized
+
+	// read admin password
 	password := os.Getenv("PROMPTIFY_ADMIN_PASSWORD")
 	if password == "" {
 		password = defaultAdminPassword
 	}
 
-	var email string
-	if rawEmail == "" {
-		email = defaultAdminEmail
-	} else {
-		normalized, err := validate.Email(rawEmail)
-		if err != nil {
-			return fmt.Errorf("PROMPTIFY_ADMIN_EMAIL: %w", err)
-		}
-		email = normalized
-	}
-
+	// get the admin UID
 	adminUID, err := s.GetAdminUID(ctx)
+
+	// if the admin UID is not found, create a new admin user
 	if errors.Is(err, store.ErrNotFound) {
 		return createFirstAdmin(ctx, s, email, password)
 	}
@@ -56,11 +59,6 @@ func BootstrapAdmin(ctx context.Context, s store.Store) error {
 }
 
 func createFirstAdmin(ctx context.Context, s store.Store, email, password string) error {
-	userCount, err := s.CountUsers(ctx)
-	if err != nil {
-		return fmt.Errorf("count users: %w", err)
-	}
-
 	uid, err := newStableUID()
 	if err != nil {
 		return fmt.Errorf("generate admin uid: %w", err)
@@ -84,12 +82,6 @@ func createFirstAdmin(ctx context.Context, s store.Store, email, password string
 		return fmt.Errorf("insert admin pointer: %w", err)
 	}
 
-	if userCount == 0 {
-		if err := s.AssignLegacyPrompts(ctx, uid); err != nil {
-			return fmt.Errorf("assign legacy prompts: %w", err)
-		}
-	}
-
 	log.Println("admin user created from environment")
 	return nil
 }
@@ -97,6 +89,7 @@ func createFirstAdmin(ctx context.Context, s store.Store, email, password string
 func syncAdminUser(ctx context.Context, s store.Store, uid, email, password string) error {
 	user, err := s.GetUserByUID(ctx, uid)
 	if errors.Is(err, store.ErrNotFound) {
+		// use the existing uid to create a new admin user
 		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			return fmt.Errorf("hash admin password: %w", err)
@@ -116,6 +109,7 @@ func syncAdminUser(ctx context.Context, s store.Store, uid, email, password stri
 		return fmt.Errorf("load admin user: %w", err)
 	}
 
+	// check if the admin email or password has changed
 	emailChanged := !strings.EqualFold(user.Email, email)
 	passChanged := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) != nil
 	if !emailChanged && !passChanged {
