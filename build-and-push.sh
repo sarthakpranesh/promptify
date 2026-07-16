@@ -6,7 +6,7 @@ set -euo pipefail
 # Docker Hub image coordinates.
 DOCKERHUB_USERNAME="sarthakpranesh"
 IMAGE_NAME="promptify"
-TAG="0.0.1"
+TAG="0.0.2"
 
 # Full image name to build and push (version tag + latest).
 FULL_IMAGE_NAME="${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${TAG}"
