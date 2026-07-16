@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -18,31 +17,27 @@ import (
 )
 
 func main() {
-	logPath := os.Getenv("PROMPTIFY_LOG_PATH")
-	if logPath == "" {
-		sqlitePath := strings.TrimSpace(os.Getenv("PROMPTIFY_SQLITE_PATH"))
-		if sqlitePath == "" {
-			sqlitePath = filepath.Join("data", "database.db")
-		}
-		logPath = filepath.Join(filepath.Dir(sqlitePath), "promptify.log")
-	}
-	resolvedLog, logCloser, err := applog.Setup(logPath)
+	// build logger
+	resolvedLog, logCloser, err := applog.Setup()
 	if err != nil {
 		log.Fatalf("failed to open log file: %v", err)
 	}
 	defer logCloser.Close()
 
+	// open database
 	database, err := db.Open(context.Background())
 	if err != nil {
 		log.Fatalf("failed to open database: %v", err)
 	}
 	defer database.Close()
 
+	// build server session secret
 	sessionSecret := []byte(strings.TrimSpace(os.Getenv("PROMPTIFY_SESSION_SECRET")))
 	if len(sessionSecret) == 0 {
 		log.Fatal("PROMPTIFY_SESSION_SECRET is required; set a long random value (see README)")
 	}
 
+	// bootstrap the admin user
 	if err := auth.BootstrapAdmin(context.Background(), database); err != nil {
 		log.Fatalf("failed to bootstrap admin: %v", err)
 	}
@@ -51,6 +46,7 @@ func main() {
 	adminHandler := handlers.NewAdminHandler(database, sessionSecret, resolvedLog)
 	h := handlers.NewPromptHandler(database)
 
+	// build the router
 	r := chi.NewRouter()
 
 	// Frontend auth pages.

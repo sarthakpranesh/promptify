@@ -328,11 +328,6 @@ func (s *Store) DeleteUserAndData(ctx context.Context, uid string) error {
 	return tx.Commit()
 }
 
-func (s *Store) AssignLegacyPrompts(ctx context.Context, uid string) error {
-	_, err := s.db.ExecContext(ctx, `UPDATE prompts SET userId = ? WHERE userId = 'legacy'`, uid)
-	return err
-}
-
 func (s *Store) ListPromptsForUser(ctx context.Context, uid string) ([]store.PromptSummary, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT p.id, p.name, p.description, COALESCE(pv.version, 0), pv.template
